@@ -26,21 +26,25 @@ function main(){
         let b = a.code;
         switch(b){
             case "KeyW":
+            case "ArrowUp":
                 if(direz[1] != 1){
                     direz = [0,-1];
                 }
                 break;
             case "KeyS":
+            case "ArrowDown":
                 if(direz[1] != -1){
                     direz = [0,1];
                 }
                 break
             case "KeyA":
+            case "ArrowLeft":
                 if(direz[0] != 1){
                     direz = [-1,0];
                 }
                 break;
             case "KeyD":
+            case "ArrowRight":
                 if(direz[0] != -1){
                     direz = [1,0];
                 }
@@ -126,18 +130,14 @@ function spawnFood(c,posSnake){
     let pos = generaPosRandom();
     console.log("Generazione di un nuovo food");
     let conflitto = true;
-    let cou=0;
     while(conflitto){
         for(let x = 0;x<posSnake.length;x++){
             if(pos[0][0] == posSnake[x][0] && pos[0][1] == posSnake[x][1]){
-                cou++
+                pos = generaPosRandom();
                 break;
+            }else{
+                conflitto = false;
             }
-        }
-        if(!cou){
-            conflitto=false;
-        }else{
-            pos = generaPosRandom();
         }
     }
     disegnaQuadrati(c,pos,FCOLOR);
