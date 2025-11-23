@@ -1,20 +1,27 @@
 document.addEventListener("DOMContentLoaded",main,false);
 
-const MAX_WIDTH=500;
+const MAX_WIDTH=1000;
 const MAX_HEIGHT=500;
 const PIXEL_DIM = 20;
 const MAX_X =MAX_WIDTH/PIXEL_DIM;
 const MAX_Y =MAX_HEIGHT/PIXEL_DIM;
-const SCOLOR = "black";
+const SCOLOR = "yellow";
 const FCOLOR = "red";
-const UCOLOR = "white";
-const GAMETICK= 100;
+const UCOLOR = "green";
+const GAMETICK= 70;
+const percorsi = ["./Images/Testa.png","./Images/Corpo.png","./Images/Fine.png","./Images/Cibo.png"];
+const immagini=[null,null,null,null];
+for(let i = 0;i<4;i++){
+    immagini[i] = new Image;
+    immagini[i].src = percorsi[i];
+}
 let direz;
 let pos;
 let dim = 1;
 let ris=null;
 let generato;
 let posF;
+let maxP=0;
 
 function getObj(id){
     return document.getElementById(id);
@@ -51,11 +58,12 @@ function main(){
                 break;
         }
     })
+    putPunteggio("Sc",0);
+    pulisciCampo(getObj("campoGioco").getContext("2d"));
 }
 
 function game(){
     if(ris!=null){
-        alert("Hai già startato una partita");
         return;
     }
     let campo = getObj("campoGioco");
@@ -66,18 +74,18 @@ function game(){
     generato=false;
     ris = setInterval(() => {
         if(!generato){
-            posFood = spawnFood(campo,pos);
-            console.log(posFood[0]);
+            posF = spawnFood(campo,pos);
+            console.log(posF[0]);
             generato = true;
         }
 
-        let index = dim == 1 ? dim-1 : pos.length-1;
+        let index = dim -1;
         
         nuovaPos = [pos[index][0] + direz[0],pos[index][1] + direz[1]];
         pos.push(nuovaPos);      // aggiornamento posizione testa la pos è una lista invertita, l'ultima posizione è la testa
         //console.log(pos)              // posvecchia posnuova
 
-        dim = checkFood(pos,posFood,generato);
+        dim = checkFood(pos,posF,generato);
 
         pos = clearPath(campo,dim,pos);     //tolgo la pos vecchia
                 
@@ -88,10 +96,16 @@ function game(){
         
         //console.log(dim);
 
-        disegnaQuadrati(campo,pos,SCOLOR);      // solo qua aggiorno lo screen
-        
+        disegnaQuadrati(campo,pos,SCOLOR,"s");      // solo qua aggiorno lo screen
+        putPunteggio("Sc",dim-1);
 
     },GAMETICK);
+}
+
+function putPunteggio(id,curr){
+    let obj = getObj(id);
+    let tex = `Corrente: ${curr} Massimo: ${maxP}`;
+    obj.innerText=tex;
 }
 
 function checkFood(pos,posFood){
@@ -140,22 +154,43 @@ function spawnFood(c,posSnake){
             }
         }
     }
-    disegnaQuadrati(c,pos,FCOLOR);
+    disegnaQuadrati(c,pos,FCOLOR,"c");
     return pos;
 }
 
 function stopGame(c){
     clearInterval(ris);
-    c.fillStyle="white";
-    c.fillRect(0,0,MAX_WIDTH,MAX_HEIGHT);
+    pulisciCampo(c);
     alert("Hai perso");
+    maxP=dim-1;
+    putPunteggio("Sc",0);
     ris=null
 }
 
-function disegnaQuadrati(c,posizioni,color){
+function disegnaQuadrati(c,posizioni,color,id){
     c.fillStyle=color;
     for(let x = 0;x<posizioni.length;x++){
-        c.fillRect(posizioni[x][0]*PIXEL_DIM,posizioni[x][1]*PIXEL_DIM,PIXEL_DIM,PIXEL_DIM);
+        let posx = posizioni[x][0]*PIXEL_DIM;
+        let posy = posizioni[x][1]*PIXEL_DIM;
+
+        if(id == "s"){
+            switch(x){
+                case (posizioni.length-1):
+                    c.drawImage(immagini[0],posx,posy);
+                    break;
+                case 0:
+                    c.drawImage(immagini[2],posx,posy);
+                    break;
+                default:
+                    c.drawImage(immagini[1],posx,posy);
+                    break;
+            }
+           
+        }else if(id == "c"){
+            c.drawImage(immagini[3],posx,posy);
+        }else{
+            c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);
+        }
     }
 }
 
@@ -165,4 +200,9 @@ function generaPosRandom(){
 
 function random(min,max){
     return Math.floor(Math.random() * (max - min +1) + min);
+}
+
+function pulisciCampo(c){
+    c.fillStyle=UCOLOR;
+    c.fillRect(0,0,MAX_WIDTH,MAX_HEIGHT);
 }

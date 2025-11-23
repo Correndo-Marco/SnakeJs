@@ -2,5 +2,9 @@ canvas{
     margin: auto;
     border: 1px solid black;
     height: 500px;
-    width: 500px;
+    width: 1000px;
+}
+
+h1{
+    text-align: center;
 }
