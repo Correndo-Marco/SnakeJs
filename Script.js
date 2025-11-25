@@ -11,8 +11,8 @@ const UCOLOR = "white";
 const GAMETICK = 100;
 
 const percorsiTesta=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
-const percorsiCorpo=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
-const percorsiCoda=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
+const percorsiCorpo=["./Images/Corpo_Up.png","./Images/Corpo_Right.png","./Images/Corpo_Down.png","./Images/Corpo_Left.png"];
+const percorsiCoda=["./Images/Coda_Up.png","./Images/Coda_Right.png","./Images/Coda_Down.png","./Images/Coda_Left.png"];
 const percorsiS = [percorsiTesta,percorsiCorpo,percorsiCoda];
 let immaginiFinali = [];
 
@@ -42,7 +42,7 @@ const indiciPosizioni= [3,0,0,2,1] // 2 * direz[0] + direz[1] + 2 ---> per la po
 
 let direz;
 let pos;
-let dim = 2;
+let dim = 3;
 let ris=null;
 let generato;
 let posF;
@@ -96,7 +96,7 @@ function game(){
     campo = campo.getContext("2d");
     direz = [1,0];
     pos = [[10,10]];
-    dim = 2 ;
+    dim = 3;
     generato=false;
     ris = setInterval(() => {
         if(!generato){
@@ -123,7 +123,7 @@ function game(){
         //console.log(dim);
 
         disegnaQuadrati(campo,pos,SCOLOR,"s");      // solo qua aggiorno lo screen
-        putPunteggio("Sc",dim-1);
+        putPunteggio("Sc",dim-3);
 
     },GAMETICK);
 }
