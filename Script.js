@@ -1,23 +1,48 @@
 document.addEventListener("DOMContentLoaded",main,false);
 
-const MAX_WIDTH=1000;
-const MAX_HEIGHT=500;
+const MAX_WIDTH = 1000;
+const MAX_HEIGHT = 500;
 const PIXEL_DIM = 20;
-const MAX_X =MAX_WIDTH/PIXEL_DIM;
-const MAX_Y =MAX_HEIGHT/PIXEL_DIM;
+const MAX_X = MAX_WIDTH/PIXEL_DIM;
+const MAX_Y = MAX_HEIGHT/PIXEL_DIM;
 const SCOLOR = "yellow";
 const FCOLOR = "red";
-const UCOLOR = "green";
-const GAMETICK= 70;
-const percorsi = ["./Images/Testa.png","./Images/Corpo.png","./Images/Fine.png","./Images/Cibo.png"];
-const immagini=[null,null,null,null];
-for(let i = 0;i<4;i++){
-    immagini[i] = new Image;
-    immagini[i].src = percorsi[i];
+const UCOLOR = "white";
+const GAMETICK = 100;
+
+const percorsiTesta=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
+const percorsiCorpo=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
+const percorsiCoda=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
+const percorsiS = [percorsiTesta,percorsiCorpo,percorsiCoda];
+let immaginiFinali = [];
+
+for(let j = 0;j<4;j++){
+    let immagini = [];
+    if( j == 3){
+        let timg = new Image;
+        timg.src = "./Images/Cibo.png";
+        immagini.push(timg);
+    }else{
+        for(let i = 0;i<4;i++){
+            let timg = new Image;
+            timg.src = percorsiS[j][i];
+            immagini.push(timg);
+        }
+    }
+    immaginiFinali.push(immagini);
 }
+/*
+for(let i = 0;i<4;i++){
+    for(let j = 0;j<immaginiFinali[i].length;j++){
+        console.log(immaginiFinali[i][j].src);
+    }
+}*/
+
+const indiciPosizioni= [3,0,0,2,1] // 2 * direz[0] + direz[1] + 2 ---> per la posizione
+
 let direz;
 let pos;
-let dim = 1;
+let dim = 2;
 let ris=null;
 let generato;
 let posF;
@@ -30,6 +55,7 @@ function getObj(id){
 function main(){
     getObj("start").addEventListener("click",game);
     document.addEventListener("keydown",(a) => {
+        if(ris==null) return
         let b = a.code;
         switch(b){
             case "KeyW":
@@ -70,18 +96,18 @@ function game(){
     campo = campo.getContext("2d");
     direz = [1,0];
     pos = [[10,10]];
-    dim = 1;
+    dim = 2 ;
     generato=false;
     ris = setInterval(() => {
         if(!generato){
             posF = spawnFood(campo,pos);
-            console.log(posF[0]);
+            //console.log(posF[0]);
             generato = true;
         }
 
-        let index = dim -1;
+        let index = dim -1 > pos.length-1 ? pos.length-1 : dim-1;
         
-        nuovaPos = [pos[index][0] + direz[0],pos[index][1] + direz[1]];
+        let nuovaPos = [pos[index][0] + direz[0],pos[index][1] + direz[1]];
         pos.push(nuovaPos);      // aggiornamento posizione testa la pos è una lista invertita, l'ultima posizione è la testa
         //console.log(pos)              // posvecchia posnuova
 
@@ -142,7 +168,7 @@ function clearPath(c,dim,posSnake){
 
 function spawnFood(c,posSnake){
     let pos = generaPosRandom();
-    console.log("Generazione di un nuovo food");
+    //console.log("Generazione di un nuovo food");
     let conflitto = true;
     while(conflitto){
         for(let x = 0;x<posSnake.length;x++){
@@ -162,32 +188,36 @@ function stopGame(c){
     clearInterval(ris);
     pulisciCampo(c);
     alert("Hai perso");
-    maxP=dim-1;
+    maxP= dim-1 > maxP ? dim-1:maxP;
     putPunteggio("Sc",0);
     ris=null
 }
 
 function disegnaQuadrati(c,posizioni,color,id){
-    c.fillStyle=color;
+    c.fillStyle= id=="s"? UCOLOR : color;
     for(let x = 0;x<posizioni.length;x++){
         let posx = posizioni[x][0]*PIXEL_DIM;
         let posy = posizioni[x][1]*PIXEL_DIM;
 
         if(id == "s"){
+            c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);  //pulisco
             switch(x){
-                case (posizioni.length-1):
-                    c.drawImage(immagini[0],posx,posy);
+                case (posizioni.length-1):  //testa     
+                    let indiceS = formula(direz);
+                    c.drawImage(immaginiFinali[0][indiciPosizioni[indiceS]],posx,posy);
                     break;
-                case 0:
-                    c.drawImage(immagini[2],posx,posy);
-                    break;
-                default:
-                    c.drawImage(immagini[1],posx,posy);
+                default:        //corpo e coda
+                    let deltax = pos[x+1][0] - pos[x][0];
+                    let deltay = pos[x+1][1] - pos[x][1];
+                    let direzione = [deltax,deltay];
+                    let indiceC = formula(direzione);
+                    let parte = x==0 ? 2 : 1;  // 2 per coda, 1 per corpo
+                    c.drawImage(immaginiFinali[parte][indiciPosizioni[indiceC]],posx,posy);
                     break;
             }
            
         }else if(id == "c"){
-            c.drawImage(immagini[3],posx,posy);
+            c.drawImage(immaginiFinali[3][0],posx,posy);
         }else{
             c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);
         }
@@ -206,3 +236,8 @@ function pulisciCampo(c){
     c.fillStyle=UCOLOR;
     c.fillRect(0,0,MAX_WIDTH,MAX_HEIGHT);
 }
+
+function formula(direzione){            // LA formula per abbinare direzione a index dello sprite giusto
+    return 2 * direzione[0] + direzione[1] + 2;
+}
+
