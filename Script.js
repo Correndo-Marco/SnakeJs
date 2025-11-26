@@ -9,6 +9,9 @@ const SCOLOR = "yellow";
 const FCOLOR = "red";
 const UCOLOR = "white";
 const GAMETICK = 100;
+const EzMode = true;
+const EzLevel = 2;
+const SuperProb = 10;
 
 const percorsiTesta=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
 const percorsiCorpo=["./Images/Corpo_Up.png","./Images/Corpo_Right.png","./Images/Corpo_Down.png","./Images/Corpo_Left.png"];
@@ -21,7 +24,10 @@ for(let j = 0;j<4;j++){
     if( j == 3){
         let timg = new Image;
         timg.src = "./Images/Cibo.png";
+        let simg = new Image;
+        simg.src = "./Images/Super_Cibo.png"
         immagini.push(timg);
+        immagini.push(simg);
     }else{
         for(let i = 0;i<4;i++){
             let timg = new Image;
@@ -47,6 +53,7 @@ let ris=null;
 let generato;
 let posF;
 let maxP=0;
+let superFood=false;
 
 function getObj(id){
     return document.getElementById(id);
@@ -138,7 +145,11 @@ function checkFood(pos,posFood){
     if(pos[pos.length-1][0] == posFood[0][0] && pos[pos.length-1][1] == posFood[0][1]){ 
         generato = false;
     }
-    return (generato ? dim:dim+1);
+    let delta = 1;
+    if(superFood){
+        delta = 5
+    }
+    return (generato ? dim:dim+delta);
 }
 
 function checkCollisioni(pos){
@@ -172,14 +183,29 @@ function spawnFood(c,posSnake){
     let conflitto = true;
     while(conflitto){
         for(let x = 0;x<posSnake.length;x++){
-            if(pos[0][0] == posSnake[x][0] && pos[0][1] == posSnake[x][1]){
+            if(pos[0][0] == posSnake[x][0] && pos[0][1] == posSnake[x][1]){     // controllo conflitti con snake
                 pos = generaPosRandom();
+                conflitto = true;
                 break;
             }else{
                 conflitto = false;
             }
         }
+        if(EzMode){
+            if(pos[0][0] < EzLevel || pos[0][0] > MAX_X - EzLevel){
+                pos = generaPosRandom();
+                conflitto = true;
+            }else if(pos[0][1] < EzLevel || pos[0][1] > MAX_Y - EzLevel){
+                pos = generaPosRandom();
+                conflitto = true;
+            }else{
+                console.log(pos[0]);
+                conflitto = false;
+            }
+        }
     }
+    let isSuper = random(0,SuperProb);
+    superFood = isSuper == SuperProb;
     disegnaQuadrati(c,pos,FCOLOR,"c");
     return pos;
 }
@@ -188,7 +214,7 @@ function stopGame(c){
     clearInterval(ris);
     pulisciCampo(c);
     alert("Hai perso");
-    maxP= dim-1 > maxP ? dim-1:maxP;
+    maxP= dim-3 > maxP ? dim-3:maxP;
     putPunteggio("Sc",0);
     ris=null
 }
@@ -217,7 +243,11 @@ function disegnaQuadrati(c,posizioni,color,id){
             }
            
         }else if(id == "c"){
-            c.drawImage(immaginiFinali[3][0],posx,posy);
+            let img = immaginiFinali[3][0];
+            if(superFood){
+                img = immaginiFinali[3][1];
+            }
+            c.drawImage(img,posx,posy);
         }else{
             c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);
         }
