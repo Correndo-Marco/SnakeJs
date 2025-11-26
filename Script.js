@@ -64,28 +64,39 @@ function main(){
     document.addEventListener("keydown",(a) => {
         if(ris==null) return
         let b = a.code;
+        let deltax = pos[pos.length -1][0] - pos[pos.length-2][0];
+        let deltay = pos[pos.length -1][0] - pos[pos.length-2][0];
         switch(b){
             case "KeyW":
             case "ArrowUp":
-                if(direz[1] != 1){
+                if(deltax == 0 && deltay == 0){
+                    return;
+                }else if(direz[1] != 1){
                     direz = [0,-1];
                 }
                 break;
             case "KeyS":
             case "ArrowDown":
-                if(direz[1] != -1){
-                    direz = [0,1];
+                if(deltax == 0 && deltay == 0){
+                    return;
+                }else if(direz[1] != -1){
+                    direz = [0,1];  
                 }
                 break
             case "KeyA":
             case "ArrowLeft":
+                if(deltax == 1 && deltay == 1){
+                    return;
+                }
                 if(direz[0] != 1){
                     direz = [-1,0];
                 }
                 break;
             case "KeyD":
             case "ArrowRight":
-                if(direz[0] != -1){
+                if(deltax == -1 && deltay == -1){
+                    return;
+                }else if(direz[0] != -1){
                     direz = [1,0];
                 }
                 break;
@@ -199,7 +210,7 @@ function spawnFood(c,posSnake){
                 pos = generaPosRandom();
                 conflitto = true;
             }else{
-                console.log(pos[0]);
+                //console.log(pos[0]);
                 conflitto = false;
             }
         }
@@ -213,7 +224,7 @@ function spawnFood(c,posSnake){
 function stopGame(c){
     clearInterval(ris);
     pulisciCampo(c);
-    alert("Hai perso");
+    //alert("Hai perso");
     maxP= dim-3 > maxP ? dim-3:maxP;
     putPunteggio("Sc",0);
     ris=null
