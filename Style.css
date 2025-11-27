@@ -1,10 +1,95 @@
-canvas{
-    margin: auto;
-    border: 1px solid black;
-    height: 500px;
-    width: 1000px;
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    font-family: 'Arial', sans-serif;
+    color: white;
 }
 
-h1{
+h1 {
     text-align: center;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+#Sc {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #fff;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    min-width: 300px;
+}
+
+canvas {
+    border: 3px solid #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    background: #000;
+}
+
+#start {
+    background: linear-gradient(45deg, #ff6b6b, #feca57);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    margin-top: 20px;
+}
+
+#start:hover {
+    background: linear-gradient(45deg, #feca57, #ff6b6b);
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+#pause {
+    background: linear-gradient(45deg, #4ecdc4, #44a08d);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    margin-top: 10px;
+    display: none;
+}
+
+#pause:hover {
+    background: linear-gradient(45deg, #44a08d, #4ecdc4);
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+#eventMessage {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #ff6b6b;
+    border-radius: 15px;
+    padding: 20px;
+    margin-top: 20px;
+    font-size: 2em;
+    text-align: center;
+    color: #feca57;
+    text-shadow: 0 0 10px #ff6b6b, 0 0 20px #ff6b6b;
+    animation: pulse 1s infinite;
+    min-width: 400px;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
