@@ -8,51 +8,27 @@ const MAX_Y = MAX_HEIGHT/PIXEL_DIM;
 const SCOLOR = "yellow";
 const FCOLOR = "red";
 const UCOLOR = "white";
-const GAMETICK = 100;
+const GAMETICK = 80;
 const EzMode = true;
 const EzLevel = 2;
 const SuperProb = 10;
+const AllDirez=[[0,1],[-1,0],[1,0],[0,-1]]
 
 const percorsiTesta=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
 const percorsiCorpo=["./Images/Corpo_Up.png","./Images/Corpo_Right.png","./Images/Corpo_Down.png","./Images/Corpo_Left.png"];
 const percorsiCoda=["./Images/Coda_Up.png","./Images/Coda_Right.png","./Images/Coda_Down.png","./Images/Coda_Left.png"];
 const percorsiS = [percorsiTesta,percorsiCorpo,percorsiCoda];
-let immaginiFinali = [];
+const immaginiFinali = creaImmaginiFinali();
 
-for(let j = 0;j<4;j++){
-    let immagini = [];
-    if( j == 3){
-        let timg = new Image;
-        timg.src = "./Images/Cibo.png";
-        let simg = new Image;
-        simg.src = "./Images/Super_Cibo.png"
-        immagini.push(timg);
-        immagini.push(simg);
-    }else{
-        for(let i = 0;i<4;i++){
-            let timg = new Image;
-            timg.src = percorsiS[j][i];
-            immagini.push(timg);
-        }
-    }
-    immaginiFinali.push(immagini);
-}
-/*
-for(let i = 0;i<4;i++){
-    for(let j = 0;j<immaginiFinali[i].length;j++){
-        console.log(immaginiFinali[i][j].src);
-    }
-}*/
+const indiciPosizioni= [3,0,0,2,1] // 2 * direz[0] + direz[1] + 2 ---> per la posizione , vedere formula
 
-const indiciPosizioni= [3,0,0,2,1] // 2 * direz[0] + direz[1] + 2 ---> per la posizione
-
-let direz;
-let pos;
+let direz;      // direzione snake
+let pos;        // posizione snake
 let dim = 3;
 let ris=null;
-let generato;
+let generatoFood;
 let posF;
-let maxP=0;
+let maxP = 0;
 let superFood=false;
 
 function getObj(id){
@@ -102,7 +78,8 @@ function main(){
                 break;
         }
     })
-    putPunteggio("Sc",0);
+    setPunteggio();
+    putPunteggio(0);
     pulisciCampo(getObj("campoGioco").getContext("2d"));
 }
 
@@ -112,55 +89,60 @@ function game(){
     }
     let campo = getObj("campoGioco");
     campo = campo.getContext("2d");
-    direz = [1,0];
-    pos = [[10,10]];
-    dim = 3;
-    generato=false;
+
+    init_game();
     ris = setInterval(() => {
-        if(!generato){
-            posF = spawnFood(campo,pos);
-            //console.log(posF[0]);
-            generato = true;
+        if(!generatoFood){
+            posF = spawnFood();
+            disegnaCibo(campo,posF);
+            generatoFood = true;
         }
+        cresci();
+        checkFood(pos,posF);
+        clearPath(campo,dim,pos);
 
-        let index = dim -1 > pos.length-1 ? pos.length-1 : dim-1;
-        
-        let nuovaPos = [pos[index][0] + direz[0],pos[index][1] + direz[1]];
-        pos.push(nuovaPos);      // aggiornamento posizione testa la pos è una lista invertita, l'ultima posizione è la testa
-        //console.log(pos)              // posvecchia posnuova
-
-        dim = checkFood(pos,posF,generato);
-
-        pos = clearPath(campo,dim,pos);     //tolgo la pos vecchia
-                
         if(checkCollisioni(pos)){
             stopGame(campo);
             return;
         }
         
-        //console.log(dim);
-
-        disegnaQuadrati(campo,pos,SCOLOR,"s");      // solo qua aggiorno lo screen
-        putPunteggio("Sc",dim-3);
+        disegnaSnake(campo,pos);
+        putPunteggio(dim-3);
 
     },GAMETICK);
 }
 
-function putPunteggio(id,curr){
-    let obj = getObj(id);
+function cresci(){
+    let index = dim -1 > pos.length-1 ? pos.length-1 : dim-1;
+    let nuovax = pos[index][0] + direz[0];
+    let nuovay = pos[index][1] + direz[1];
+    let nuovaPos = [nuovax,nuovay];
+    pos.push(nuovaPos);
+}
+
+function init_game(){
+    direz = AllDirez[random(0,3)];
+    pos =   generaPosRandomForSnake();
+    dim = 3;
+    generatoFood = false;
+}
+
+function putPunteggio(curr){
+    let obj = getObj("Sc");
     let tex = `Corrente: ${curr} Massimo: ${maxP}`;
     obj.innerText=tex;
 }
 
 function checkFood(pos,posFood){
-    if(pos[pos.length-1][0] == posFood[0][0] && pos[pos.length-1][1] == posFood[0][1]){ 
-        generato = false;
+    if(pos[pos.length-1][0] == posFood[0] && pos[pos.length-1][1] == posFood[1]){ 
+        generatoFood = false;
     }
     let delta = 1;
     if(superFood){
         delta = 5
     }
-    return (generato ? dim:dim+delta);
+    //return (generatoFood ? dim : dim+delta);
+    dim += generatoFood ? 0 : delta;
 }
 
 function checkCollisioni(pos){
@@ -179,23 +161,20 @@ function checkCollisioni(pos){
     return false;
 }
 
-function clearPath(c,dim,posSnake){
-    for(let x = posSnake.length-1-dim;x>=0;x--){
-        disegnaQuadrati(c,[posSnake[x]],UCOLOR);
-        posSnake.splice(0,1);
-        //console.log(x);
+function clearPath(c){
+    for(let x = pos.length-1-dim;x>=0;x--){
+        disegnaQuadrati(c,[pos[x]],UCOLOR);
+        pos.splice(0,1);
     }
-    return posSnake;
 }
 
-function spawnFood(c,posSnake){
-    let pos = generaPosRandom();
-    //console.log("Generazione di un nuovo food");
+function spawnFood(){
+    let posTemp = generaPosRandom();
     let conflitto = true;
     while(conflitto){
-        for(let x = 0;x<posSnake.length;x++){
-            if(pos[0][0] == posSnake[x][0] && pos[0][1] == posSnake[x][1]){     // controllo conflitti con snake
-                pos = generaPosRandom();
+        for(let x = 0;x<pos.length;x++){
+            if(posTemp[0] == pos[x][0] && posTemp[1] == pos[x][1]){     // controllo conflitti con snake
+                posTemp = generaPosRandom();
                 conflitto = true;
                 break;
             }else{
@@ -203,70 +182,109 @@ function spawnFood(c,posSnake){
             }
         }
         if(EzMode){
-            if(pos[0][0] < EzLevel || pos[0][0] > MAX_X - EzLevel){
-                pos = generaPosRandom();
+            if(posTemp[0] < EzLevel || posTemp[0] > MAX_X - EzLevel){
+                posTemp = generaPosRandom();
                 conflitto = true;
-            }else if(pos[0][1] < EzLevel || pos[0][1] > MAX_Y - EzLevel){
-                pos = generaPosRandom();
+            }else if(posTemp[1] < EzLevel || posTemp[1] > MAX_Y - EzLevel){
+                posTemp = generaPosRandom();
                 conflitto = true;
             }else{
-                //console.log(pos[0]);
                 conflitto = false;
             }
         }
     }
     let isSuper = random(0,SuperProb);
     superFood = isSuper == SuperProb;
-    disegnaQuadrati(c,pos,FCOLOR,"c");
-    return pos;
+    return posTemp;
 }
 
 function stopGame(c){
     clearInterval(ris);
     pulisciCampo(c);
     //alert("Hai perso");
-    maxP= dim-3 > maxP ? dim-3:maxP;
-    putPunteggio("Sc",0);
+    maxP= dim-3 > maxP ? dim-3 : maxP;
+    setPunteggio();
+    putPunteggio(0);
     ris=null
 }
 
-function disegnaQuadrati(c,posizioni,color,id){
-    c.fillStyle= id=="s"? UCOLOR : color;
-    for(let x = 0;x<posizioni.length;x++){
-        let posx = posizioni[x][0]*PIXEL_DIM;
-        let posy = posizioni[x][1]*PIXEL_DIM;
-
-        if(id == "s"){
-            c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);  //pulisco
-            switch(x){
-                case (posizioni.length-1):  //testa     
-                    let indiceS = formula(direz);
-                    c.drawImage(immaginiFinali[0][indiciPosizioni[indiceS]],posx,posy);
-                    break;
-                default:        //corpo e coda
-                    let deltax = pos[x+1][0] - pos[x][0];
-                    let deltay = pos[x+1][1] - pos[x][1];
-                    let direzione = [deltax,deltay];
-                    let indiceC = formula(direzione);
-                    let parte = x==0 ? 2 : 1;  // 2 per coda, 1 per corpo
-                    c.drawImage(immaginiFinali[parte][indiciPosizioni[indiceC]],posx,posy);
-                    break;
-            }
-           
-        }else if(id == "c"){
-            let img = immaginiFinali[3][0];
-            if(superFood){
-                img = immaginiFinali[3][1];
-            }
-            c.drawImage(img,posx,posy);
-        }else{
-            c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);
+function setPunteggio(){
+    let maxAttuale = localStorage.getItem("MaxP");
+    if(maxAttuale == null){
+        localStorage.setItem("MaxP",maxP);
+    }else{
+        if(maxAttuale < maxP){
+            localStorage.setItem("MaxP",maxP);
+        }else if(maxP < maxAttuale){
+            maxP = maxAttuale;
         }
     }
 }
 
+function disegnaQuadrati(c,posizioni,color){
+    for(let x = 0;x<posizioni.length;x++){
+        let posx = posizioni[x][0]*PIXEL_DIM;
+        let posy = posizioni[x][1]*PIXEL_DIM;
+        disegnaQuadrato(c,posx,posy,color);
+    }
+}
+
+function disegnaQuadrato(c,x,y,colore){
+    c.fillStyle = colore;
+    c.fillRect(x,y,PIXEL_DIM,PIXEL_DIM);
+}
+
+function disegnaSnake(c,posizioni){
+    c.fillStyle = UCOLOR;
+    for(let x = 0;x<posizioni.length;x++){
+        let posx = posizioni[x][0]*PIXEL_DIM;
+        let posy = posizioni[x][1]*PIXEL_DIM;
+        c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);
+        switch(x){
+            case (posizioni.length-1):  //testa     
+                let indiceS = formula(direz);
+                c.drawImage(immaginiFinali[0][indiciPosizioni[indiceS]],posx,posy);
+                break;
+            default:        //corpo e coda
+                let deltax = pos[x+1][0] - pos[x][0];
+                let deltay = pos[x+1][1] - pos[x][1];
+                let direzione = [deltax,deltay];
+                let indiceC = formula(direzione);
+                let parte = x==0 ? 2 : 1;  // 2 per coda, 1 per corpo
+                c.drawImage(immaginiFinali[parte][indiciPosizioni[indiceC]],posx,posy);
+                break;
+        }
+    }
+}
+
+function disegnaCibo(c,posizioni){
+    let posx = posizioni[0]*PIXEL_DIM;
+    let posy = posizioni[1]*PIXEL_DIM;
+    let img = immaginiFinali[3][0];
+    if(superFood){
+        img = immaginiFinali[3][1];
+    }
+    c.drawImage(img,posx,posy);
+}
+
 function generaPosRandom(){
-    return [[random(0,MAX_X-1),random(0,MAX_Y-1)]];
+    return [random(0,MAX_X-1),random(0,MAX_Y-1)];
+}
+
+function generaPosRandomForSnake(){
+    let posTemp = generaPosRandom();
+    let conflitto = true;
+    let diff = 10;
+    while(conflitto){
+        if(posTemp[0] < diff || posTemp[0] > MAX_X - diff){
+            posTemp = generaPosRandom();
+        }else if(posTemp[1] < diff || posTemp[1] > MAX_Y - diff){
+            posTemp = generaPosRandom();
+        }else{
+            conflitto = false;
+        }
+    }
+    return [posTemp];
 }
 
 function random(min,max){
@@ -282,3 +300,25 @@ function formula(direzione){            // LA formula per abbinare direzione a i
     return 2 * direzione[0] + direzione[1] + 2;
 }
 
+function creaImmaginiFinali(){
+    let temp = [];
+    for(let j = 0;j<4;j++){
+        let immagini = [];
+        if( j == 3){
+            let timg = new Image;
+            timg.src = "./Images/Cibo.png";
+            let simg = new Image;
+            simg.src = "./Images/Super_Cibo.png"
+            immagini.push(timg);
+            immagini.push(simg);
+        }else{
+            for(let i = 0;i<4;i++){
+                let timg = new Image;
+                timg.src = percorsiS[j][i];
+                immagini.push(timg);
+            }
+        }
+        temp.push(immagini);
+    }
+    return temp;
+}
