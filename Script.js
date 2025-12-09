@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded",main,false);
 
-const MAX_WIDTH = 1000;
+const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
 const PIXEL_DIM = 20;
 const MAX_X = MAX_WIDTH/PIXEL_DIM;
@@ -8,11 +8,8 @@ const MAX_Y = MAX_HEIGHT/PIXEL_DIM;
 const SCOLOR = "yellow";
 const FCOLOR = "red";
 const UCOLOR = "white";
-const GAMETICK = 80;
-const EzMode = true;
-const EzLevel = 2;
-const SuperProb = 10;
 const AllDirez=[[0,1],[-1,0],[1,0],[0,-1]]
+const START_DIM = 3;
 
 const percorsiTesta=["./Images/Testa_Up.png","./Images/Testa_Right.png","./Images/Testa_Down.png","./Images/Testa_Left.png"];
 const percorsiCorpo=["./Images/Corpo_Up.png","./Images/Corpo_Right.png","./Images/Corpo_Down.png","./Images/Corpo_Left.png"];
@@ -22,6 +19,22 @@ const immaginiFinali = creaImmaginiFinali();
 
 const indiciPosizioni= [3,0,0,2,1] // 2 * direz[0] + direz[1] + 2 ---> per la posizione , vedere formula
 
+let gameInfo = {
+    direz : null,
+    pos : null,
+    dim : 3,
+    ris : null,
+    generatoFood : false,
+    posF : null,
+    maxP : 0,
+    superFood : false,
+    SuperProb : 10,
+    EzLevel : 2,
+    EzMode : true,
+    GAMETICK : 80
+};
+
+/*
 let direz;      // direzione snake
 let pos;        // posizione snake
 let dim = 3;
@@ -30,6 +43,7 @@ let generatoFood;
 let posF;
 let maxP = 0;
 let superFood=false;
+*/
 
 function getObj(id){
     return document.getElementById(id);
@@ -38,42 +52,43 @@ function getObj(id){
 function main(){
     getObj("start").addEventListener("click",game);
     document.addEventListener("keydown",(a) => {
-        if(ris==null) return
+        if(gameInfo.ris==null) return
         let b = a.code;
-        let deltax = pos[pos.length -1][0] - pos[pos.length-2][0];
-        let deltay = pos[pos.length -1][0] - pos[pos.length-2][0];
+        let deltax = gameInfo.pos[gameInfo.pos.length -1][0] - gameInfo.pos[gameInfo.pos.length-2][0];
+        let deltay = gameInfo.pos[gameInfo.pos.length -1][1] - gameInfo.pos[gameInfo.pos.length-2][1];
+        console.log(deltax,deltay);
         switch(b){
             case "KeyW":
             case "ArrowUp":
                 if(deltax == 0 && deltay == 0){
                     return;
-                }else if(direz[1] != 1){
-                    direz = [0,-1];
+                }else if(gameInfo.direz[1] != 1){
+                    gameInfo.direz = [0,-1];
                 }
                 break;
             case "KeyS":
             case "ArrowDown":
-                if(deltax == 0 && deltay == 0){
+                if(deltax == 0 && deltay == -1){
                     return;
-                }else if(direz[1] != -1){
-                    direz = [0,1];  
+                }else if(gameInfo.direz[1] != -1){
+                    gameInfo.direz = [0,1];  
                 }
                 break
             case "KeyA":
             case "ArrowLeft":
-                if(deltax == 1 && deltay == 1){
+                if(deltax == 1 && deltay == 0){
                     return;
                 }
-                if(direz[0] != 1){
-                    direz = [-1,0];
+                if(gameInfo.direz[0] != 1){
+                    gameInfo.direz = [-1,0];
                 }
                 break;
             case "KeyD":
             case "ArrowRight":
-                if(deltax == -1 && deltay == -1){
+                if(deltax == -1 && deltay == 0){
                     return;
-                }else if(direz[0] != -1){
-                    direz = [1,0];
+                }else if(gameInfo.direz[0] != -1){
+                    gameInfo.direz = [1,0];
                 }
                 break;
         }
@@ -84,65 +99,66 @@ function main(){
 }
 
 function game(){
-    if(ris!=null){
-        return;
-    }
+    if(gameInfo.ris!=null) return
+
     let campo = getObj("campoGioco");
     campo = campo.getContext("2d");
 
     init_game();
-    ris = setInterval(() => {
-        if(!generatoFood){
-            posF = spawnFood();
-            disegnaCibo(campo,posF);
-            generatoFood = true;
+
+    gameInfo.ris = setInterval(() => {
+        if(!gameInfo.generatoFood){
+            gameInfo.posF = spawnFood();
+            disegnaCibo(campo,gameInfo.posF);
+            gameInfo.generatoFood = true;
         }
         cresci();
-        checkFood(pos,posF);
-        clearPath(campo,dim,pos);
+        checkFood(gameInfo.posF);
+        clearPath(campo);
 
-        if(checkCollisioni(pos)){
+        if(checkCollisioni(gameInfo.pos)){
             stopGame(campo);
             return;
         }
         
-        disegnaSnake(campo,pos);
-        putPunteggio(dim-3);
+        disegnaSnake(campo,gameInfo.pos);
+        putPunteggio(gameInfo.dim-START_DIM);
 
-    },GAMETICK);
+    },gameInfo.GAMETICK);
 }
 
 function cresci(){
-    let index = dim -1 > pos.length-1 ? pos.length-1 : dim-1;
-    let nuovax = pos[index][0] + direz[0];
-    let nuovay = pos[index][1] + direz[1];
+    let index = gameInfo.dim -1 > gameInfo.pos.length-1 ? gameInfo.pos.length-1 : gameInfo.dim-1;
+    let nuovax = gameInfo.pos[index][0] + gameInfo.direz[0];
+    let nuovay = gameInfo.pos[index][1] + gameInfo.direz[1];
     let nuovaPos = [nuovax,nuovay];
-    pos.push(nuovaPos);
+    gameInfo.pos.push(nuovaPos);
 }
 
 function init_game(){
-    direz = AllDirez[random(0,3)];
-    pos =   generaPosRandomForSnake();
-    dim = 3;
-    generatoFood = false;
+    gameInfo.direz = AllDirez[random(0,3)];
+    gameInfo.pos = generaPosRandomForSnake();
+    gameInfo.dim = START_DIM;
+    gameInfo.generatoFood = false;
 }
 
 function putPunteggio(curr){
     let obj = getObj("Sc");
-    let tex = `Corrente: ${curr} Massimo: ${maxP}`;
+    let tex = `Corrente: ${curr} Massimo: ${gameInfo.maxP}`;
     obj.innerText=tex;
 }
 
-function checkFood(pos,posFood){
-    if(pos[pos.length-1][0] == posFood[0] && pos[pos.length-1][1] == posFood[1]){ 
-        generatoFood = false;
+function checkFood(posFood){
+    let last = gameInfo.pos.length - 1;
+    if(gameInfo.pos[last][0] == posFood[0] && gameInfo.pos[last][1] == posFood[1]){ 
+        gameInfo.generatoFood = false;
     }
     let delta = 1;
-    if(superFood){
+    if(gameInfo.superFood){
         delta = 5
     }
     //return (generatoFood ? dim : dim+delta);
-    dim += generatoFood ? 0 : delta;
+    gameInfo.dim += gameInfo.generatoFood ? 0 : delta;
 }
 
 function checkCollisioni(pos){
@@ -162,9 +178,9 @@ function checkCollisioni(pos){
 }
 
 function clearPath(c){
-    for(let x = pos.length-1-dim;x>=0;x--){
-        disegnaQuadrati(c,[pos[x]],UCOLOR);
-        pos.splice(0,1);
+    for(let x = gameInfo.pos.length-1-gameInfo.dim;x>=0;x--){
+        disegnaQuadrati(c,[gameInfo.pos[x]],UCOLOR);
+        gameInfo.pos.splice(0,1);
     }
 }
 
@@ -172,8 +188,8 @@ function spawnFood(){
     let posTemp = generaPosRandom();
     let conflitto = true;
     while(conflitto){
-        for(let x = 0;x<pos.length;x++){
-            if(posTemp[0] == pos[x][0] && posTemp[1] == pos[x][1]){     // controllo conflitti con snake
+        for(let x = 0;x<gameInfo.pos.length;x++){
+            if(posTemp[0] == gameInfo.pos[x][0] && posTemp[1] == gameInfo.pos[x][1]){     // controllo conflitti con snake
                 posTemp = generaPosRandom();
                 conflitto = true;
                 break;
@@ -181,11 +197,11 @@ function spawnFood(){
                 conflitto = false;
             }
         }
-        if(EzMode){
-            if(posTemp[0] < EzLevel || posTemp[0] > MAX_X - EzLevel){
+        if(gameInfo.EzMode){
+            if(posTemp[0] < gameInfo.EzLevel || posTemp[0] > MAX_X - gameInfo.EzLevel){
                 posTemp = generaPosRandom();
                 conflitto = true;
-            }else if(posTemp[1] < EzLevel || posTemp[1] > MAX_Y - EzLevel){
+            }else if(posTemp[1] < gameInfo.EzLevel || posTemp[1] > MAX_Y - gameInfo.EzLevel){
                 posTemp = generaPosRandom();
                 conflitto = true;
             }else{
@@ -193,30 +209,29 @@ function spawnFood(){
             }
         }
     }
-    let isSuper = random(0,SuperProb);
-    superFood = isSuper == SuperProb;
+    let isSuper = random(0,gameInfo.SuperProb);
+    gameInfo.superFood = isSuper == gameInfo.SuperProb;
     return posTemp;
 }
 
 function stopGame(c){
-    clearInterval(ris);
+    clearInterval(gameInfo.ris);
     pulisciCampo(c);
-    //alert("Hai perso");
-    maxP= dim-3 > maxP ? dim-3 : maxP;
+    gameInfo.maxP= gameInfo.dim- START_DIM > gameInfo.maxP ? gameInfo.dim-START_DIM : gameInfo.maxP;
     setPunteggio();
     putPunteggio(0);
-    ris=null
+    gameInfo.ris = null
 }
 
 function setPunteggio(){
-    let maxAttuale = localStorage.getItem("MaxP");
+    let maxAttuale = Number(localStorage.getItem("MaxP"));
     if(maxAttuale == null){
-        localStorage.setItem("MaxP",maxP);
+        localStorage.setItem("MaxP",gameInfo.maxP);
     }else{
-        if(maxAttuale < maxP){
-            localStorage.setItem("MaxP",maxP);
-        }else if(maxP < maxAttuale){
-            maxP = maxAttuale;
+        if(maxAttuale < gameInfo.maxP){
+            localStorage.setItem("MaxP",gameInfo.maxP);
+        }else if(gameInfo.maxP < maxAttuale){
+            gameInfo.maxP = maxAttuale;
         }
     }
 }
@@ -242,12 +257,12 @@ function disegnaSnake(c,posizioni){
         c.fillRect(posx,posy,PIXEL_DIM,PIXEL_DIM);
         switch(x){
             case (posizioni.length-1):  //testa     
-                let indiceS = formula(direz);
+                let indiceS = formula(gameInfo.direz);
                 c.drawImage(immaginiFinali[0][indiciPosizioni[indiceS]],posx,posy);
                 break;
             default:        //corpo e coda
-                let deltax = pos[x+1][0] - pos[x][0];
-                let deltay = pos[x+1][1] - pos[x][1];
+                let deltax = posizioni[x+1][0] - posizioni[x][0];
+                let deltay = posizioni[x+1][1] - posizioni[x][1];
                 let direzione = [deltax,deltay];
                 let indiceC = formula(direzione);
                 let parte = x==0 ? 2 : 1;  // 2 per coda, 1 per corpo
@@ -261,7 +276,7 @@ function disegnaCibo(c,posizioni){
     let posx = posizioni[0]*PIXEL_DIM;
     let posy = posizioni[1]*PIXEL_DIM;
     let img = immaginiFinali[3][0];
-    if(superFood){
+    if(gameInfo.superFood){
         img = immaginiFinali[3][1];
     }
     c.drawImage(img,posx,posy);
