@@ -106,16 +106,16 @@ function game(){
 
     gameInfo.ris = setInterval(() => {
         
-        cresci();
         if(!gameInfo.generatoFood){
             gameInfo.posF = spawnFood();
             disegnaCibo(campo,gameInfo.posF);
             gameInfo.generatoFood = true;
         }
-
+        
+        cresci();
         checkFood(gameInfo.posF);
         clearPath(campo);
-
+        
         if(checkCollisioni(gameInfo.pos)){
             stopGame(campo);
             return;
@@ -123,7 +123,7 @@ function game(){
         
         disegnaSnake(campo,gameInfo.pos);
         putPunteggio(gameInfo.dim-START_DIM);
-
+       
     },gameInfo.GAMETICK);
 }
 
@@ -157,7 +157,6 @@ function checkFood(posFood){
     if(gameInfo.superFood){
         delta = 5
     }
-    //return (generatoFood ? dim : dim+delta);
     gameInfo.dim += gameInfo.generatoFood ? 0 : delta;
 }
 
@@ -178,8 +177,8 @@ function checkCollisioni(pos){
 }
 
 function clearPath(c){
-    for(let x = gameInfo.pos.length-1-gameInfo.dim;x>=0;x--){
-        disegnaQuadrato(c,gameInfo.pos[x][0],gameInfo.pos[x][1],UCOLOR);
+    for(let x = gameInfo.pos.length-1 - gameInfo.dim; x>=0; x--){
+        disegnaQuadrati(c,[gameInfo.pos[x]],UCOLOR);
         gameInfo.pos.splice(0,1);
     }
 }
@@ -190,7 +189,6 @@ function spawnFood(){
     while(conflitto){
         for(let x = 0;x<gameInfo.pos.length;x++){
             if(posTemp[0] == gameInfo.pos[x][0] && posTemp[1] == gameInfo.pos[x][1]){     // controllo conflitti con snake
-                console.log(posTemp," conflitto");
                 posTemp = generaPosRandom();
                 conflitto = true;
                 break;
