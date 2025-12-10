@@ -1,10 +1,51 @@
-canvas{
-    margin: auto;
-    border: 1px solid black;
-    height: 500px;
-    width: 500px;
+body{
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0d0dad;
+    color: white;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
 }
 
-h1{
+.master{
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    flex-direction: column;
+}
+
+.gioco{
     text-align: center;
+}
+
+.titolo{
+    margin-bottom: 5px;
+    font-size: 3em;
+}
+
+.punt{
+    margin-top: 0;
+    color: #38bdf8;
+}
+
+canvas{
+    border: 2px solid #334155;
+    background: white;
+    border-radius: 6px;
+}
+
+.inizio{
+    margin-top: 15px;
+    padding: 24px 36px;
+    font-size: 1em;
+    background: #22c55e;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.inizio:hover{
+    background: #16a34a;
 }

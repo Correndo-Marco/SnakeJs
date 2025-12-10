@@ -56,7 +56,6 @@ function main(){
         let b = a.code;
         let deltax = gameInfo.pos[gameInfo.pos.length -1][0] - gameInfo.pos[gameInfo.pos.length-2][0];
         let deltay = gameInfo.pos[gameInfo.pos.length -1][1] - gameInfo.pos[gameInfo.pos.length-2][1];
-        console.log(deltax,deltay);
         switch(b){
             case "KeyW":
             case "ArrowUp":
@@ -103,16 +102,17 @@ function game(){
 
     let campo = getObj("campoGioco");
     campo = campo.getContext("2d");
-
     init_game();
 
     gameInfo.ris = setInterval(() => {
+        
+        cresci();
         if(!gameInfo.generatoFood){
             gameInfo.posF = spawnFood();
             disegnaCibo(campo,gameInfo.posF);
             gameInfo.generatoFood = true;
         }
-        cresci();
+
         checkFood(gameInfo.posF);
         clearPath(campo);
 
@@ -162,14 +162,14 @@ function checkFood(posFood){
 }
 
 function checkCollisioni(pos){
-    if(pos[pos.length-1][0] < 0 || pos[pos.length-1][0] >= MAX_X){
+    let last = pos.length - 1;
+    if(pos[last][0] < 0 || pos[last][0] >= MAX_X){
         return true;
-    }else if(pos[pos.length-1][1] < 0 || pos[pos.length-1][1] >= MAX_Y){
+    }else if(pos[last][1] < 0 || pos[last][1] >= MAX_Y){
         return true;
-    }else if(pos.length>1){
-        let max = pos.length-1
-        for(let i = 0;i<pos.length-1;i++){
-            if(pos[max][0] == pos[i][0] && pos[max][1] == pos[i][1]){
+    }else if(last>1){
+        for(let i = 0;i<last;i++){
+            if(pos[last][0] == pos[i][0] && pos[last][1] == pos[i][1]){
                 return true;
             }
         }
@@ -179,7 +179,7 @@ function checkCollisioni(pos){
 
 function clearPath(c){
     for(let x = gameInfo.pos.length-1-gameInfo.dim;x>=0;x--){
-        disegnaQuadrati(c,[gameInfo.pos[x]],UCOLOR);
+        disegnaQuadrato(c,gameInfo.pos[x][0],gameInfo.pos[x][1],UCOLOR);
         gameInfo.pos.splice(0,1);
     }
 }
@@ -190,6 +190,7 @@ function spawnFood(){
     while(conflitto){
         for(let x = 0;x<gameInfo.pos.length;x++){
             if(posTemp[0] == gameInfo.pos[x][0] && posTemp[1] == gameInfo.pos[x][1]){     // controllo conflitti con snake
+                console.log(posTemp," conflitto");
                 posTemp = generaPosRandom();
                 conflitto = true;
                 break;
@@ -221,6 +222,18 @@ function stopGame(c){
     setPunteggio();
     putPunteggio(0);
     gameInfo.ris = null
+    updatePuls("Hai perso");
+    setTimeout(updatePuls,1500);
+}
+
+function updatePuls(str = "Inizia partita"){
+    let iniz = getObj("start");
+    iniz.innerText = str;
+    if(str == "Hai perso"){
+        iniz.style.backgroundColor = "red";
+    }else{
+        iniz.style.backgroundColor = "#22c55e";
+    }
 }
 
 function setPunteggio(){
